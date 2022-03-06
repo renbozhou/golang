@@ -6,6 +6,7 @@
 *.dylib
 
 .idea/*
+
 *.iml
 *.xml
 :q
