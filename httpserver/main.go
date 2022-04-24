@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/renbozhou/golang/httpserver/metrics"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -41,12 +45,22 @@ func healthz(w http.ResponseWriter, r *http.Request) {
 	a := []byte("server up 200")
 	w.Write(a)
 }
+func images(w http.ResponseWriter, r *http.Request) {
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	randInt := rand.Intn(2000)
+	time.Sleep(time.Millisecond * time.Duration(randInt))
+	w.Write([]byte(fmt.Sprintln("<h1>%d</h1>", randInt)))
+}
 func main() {
 	fmt.Println("main")
 	server := http.NewServeMux()
 
 	server.HandleFunc("/", index)
+	server.HandleFunc("/images", images)
+	server.Handle("/metrics", promhttp.Handler())
 	server.HandleFunc("/healthz", healthz)
+
 	if err := http.ListenAndServe(":18080", server); err != nil {
 		log.Fatalf("http failed,err:%s\n ", err.Error())
 	}
